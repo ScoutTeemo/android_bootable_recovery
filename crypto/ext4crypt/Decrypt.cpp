@@ -442,7 +442,8 @@ sp<IBinder> getKeystoreBinderRetry() {
 namespace keystore {
 
 #define SYNTHETIC_PASSWORD_VERSION_V1 1
-#define SYNTHETIC_PASSWORD_VERSION 2
+#define SYNTHETIC_PASSWORD_VERSION_V2 2
+#define SYNTHETIC_PASSWORD_VERSION_V3 3
 #define SYNTHETIC_PASSWORD_PASSWORD_BASED 0
 #define SYNTHETIC_PASSWORD_KEY_PREFIX "USRSKEY_synthetic_password_"
 #define USR_PRIVATE_KEY_PREFIX "USRPKEY_synthetic_password_"
@@ -579,7 +580,7 @@ std::string unwrapSyntheticPasswordBlob(const std::string& spblob_path, const st
 		return disk_decryption_secret_key;
 	}
 	unsigned char* byteptr = (unsigned char*)spblob_data.data();
-	if (*byteptr != SYNTHETIC_PASSWORD_VERSION && *byteptr != SYNTHETIC_PASSWORD_VERSION_V1) {
+	if (*byteptr != SYNTHETIC_PASSWORD_VERSION_V1 && *byteptr != SYNTHETIC_PASSWORD_VERSION_V2 && *byteptr != SYNTHETIC_PASSWORD_VERSION_V3) {
 		printf("Unsupported synthetic password version %i\n", *byteptr);
 		return disk_decryption_secret_key;
 	}
@@ -772,7 +773,7 @@ std::string unwrapSyntheticPasswordBlob(const std::string& spblob_path, const st
 		}
 		stop_keystore();
 		return disk_decryption_secret_key;
-	} else if (*synthetic_password_version == SYNTHETIC_PASSWORD_VERSION) {
+	} else if (*synthetic_password_version == SYNTHETIC_PASSWORD_VERSION_V2) {
 		printf("spblob v2\n");
 		/* Version 2 of the spblob is basically the same as version 1, but the order of getting the intermediate key and disk decryption key have been flip-flopped
 		 * as seen in https://android.googlesource.com/platform/frameworks/base/+/5025791ac6d1538224e19189397de8d71dcb1a12
@@ -930,6 +931,8 @@ std::string unwrapSyntheticPasswordBlob(const std::string& spblob_path, const st
 		//printf("disk_decryption_secret_key: '%s'\n", disk_decryption_secret_key.c_str());
 		free(secret_key);
 		return disk_decryption_secret_key;
+	} else if (*synthetic_password_version == SYNTHETIC_PASSWORD_VERSION_V3) {
+		printf("spblob v3\n");
 	}
 	return disk_decryption_secret_key;
 }
@@ -1195,6 +1198,8 @@ int Get_Password_Type(const userid_t user_id, std::string& filename) {
 			return 2; // In TWRP this means pattern
 		else if (pwd.password_type == 2) // In Android this means PIN or password
 			return 1; // In TWRP this means PIN or password
+		else if (pwd.password_type == 3) // In Android this means SP800Derive
+			return 3; // In TWRP this means SP800Derive
 		return 0; // We'll try the default password
 #else
 		printf("Synthetic password support not present in TWRP\n");
