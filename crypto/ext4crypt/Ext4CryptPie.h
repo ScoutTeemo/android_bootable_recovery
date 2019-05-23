@@ -23,10 +23,10 @@ bool e4crypt_initialize_global_de();
 
 bool e4crypt_init_user0();
 /*bool e4crypt_vold_create_user_key(userid_t user_id, int serial, bool ephemeral);
-bool e4crypt_destroy_user_key(userid_t user_id);
+bool e4crypt_destroy_user_key(userid_t user_id);*/
 bool e4crypt_add_user_key_auth(userid_t user_id, int serial, const std::string& token,
                                const std::string& secret);
-bool e4crypt_fixate_newest_user_key_auth(userid_t user_id);*/
+//bool e4crypt_fixate_newest_user_key_auth(userid_t user_id);
 bool e4crypt_clear_user_key_auth(userid_t user_id, int serial, const std::string& token_hex,
                                const std::string& secret_hex);
 bool e4crypt_unlock_user_key(userid_t user_id, int serial, const std::string& token,

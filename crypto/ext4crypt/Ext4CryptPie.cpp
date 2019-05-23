@@ -60,10 +60,13 @@
 #include <android-base/properties.h>
 #include <android-base/stringprintf.h>
 
+#include <fstab.h>
+
 #include <iostream>
 #define LOG(x) std::cout
 #define PLOG(x) std::cout
 #define DATA_MNT_POINT "/data"
+#define METADATA_MNT_POINT "/metadata"
 
 using android::base::StringPrintf;
 using android::base::WriteStringToFile;
@@ -155,7 +158,7 @@ static std::string get_ce_key_current_path(const std::string& directory_path) {
     return directory_path + "/current";
 }
 
-/*static bool get_ce_key_new_path(const std::string& directory_path,
+static bool get_ce_key_new_path(const std::string& directory_path,
                                 const std::vector<std::string>& paths,
                                 std::string *ce_key_path) {
     if (paths.empty()) {
@@ -170,7 +173,7 @@ static std::string get_ce_key_current_path(const std::string& directory_path) {
         }
     }
     return false;
-}*/
+}
 
 // Discard all keys but the named one; rename it to canonical name.
 // No point in acting on errors in this; ignore them.
@@ -208,6 +211,12 @@ static bool read_and_fixate_user_ce_key(userid_t user_id,
 }
 
 bool is_wrapped_key_supported() {
+    struct fstab* fstab_default = nullptr;
+    fstab_default = fs_mgr_read_fstab_default();
+    if (!fstab_default) {
+        LOG(ERROR) << "Failed to read default fstab";
+        return false;
+    }
     return fs_mgr_is_wrapped_key_supported(
         fs_mgr_get_entry_for_mount_point(fstab_default, DATA_MNT_POINT));
 }
@@ -217,6 +226,12 @@ bool is_wrapped_key_supported_external() {
 }
 
 bool is_metadata_wrapped_key_supported() {
+    struct fstab* fstab_default = nullptr;
+    fstab_default = fs_mgr_read_fstab_default();
+    if (!fstab_default) {
+        LOG(ERROR) << "Failed to read default fstab";
+        return false;
+    }
     return fs_mgr_is_wrapped_key_supported(
         fs_mgr_get_entry_for_mount_point(fstab_default, METADATA_MNT_POINT));
 }
@@ -615,7 +630,7 @@ static bool read_or_create_volkey(const std::string& misc_path, const std::strin
     auto path = volkey_path(misc_path, volume_uuid);
     if (!android::vold::pathExists(path)) return true;
     return android::vold::destroyKey(path);
-}
+}*/
 
 bool e4crypt_add_user_key_auth(userid_t user_id, int serial, const std::string& token_hex,
                                const std::string& secret_hex) {
@@ -656,7 +671,7 @@ bool e4crypt_add_user_key_auth(userid_t user_id, int serial, const std::string& 
     return true;
 }
 
-bool e4crypt_fixate_newest_user_key_auth(userid_t user_id) {
+/*bool e4crypt_fixate_newest_user_key_auth(userid_t user_id) {
     LOG(DEBUG) << "e4crypt_fixate_newest_user_key_auth " << user_id;
     if (!e4crypt_is_native()) return true;
     if (s_ephemeral_users.count(user_id) != 0) return true;
